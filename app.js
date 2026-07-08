@@ -41,6 +41,7 @@
   const distanceMetric = document.querySelector("#distanceMetric");
   const avoidMetric = document.querySelector("#avoidMetric");
   const primaryButton = document.querySelector(".primary-action");
+  const crossingOverlay = document.querySelector("#crossingOverlay");
 
   const map = L.map("map", { zoomControl: false }).setView(SEOCHO_CENTER, 13);
   L.control.zoom({ position: "bottomright" }).addTo(map);
@@ -48,8 +49,9 @@
     maxZoom: 19,
     attribution: "&copy; OpenStreetMap",
   }).addTo(map);
+  map.createPane("routePane");
+  map.getPane("routePane").style.zIndex = 430;
 
-  const crossingsLayer = L.layerGroup().addTo(map);
   const routeLayer = L.layerGroup().addTo(map);
 
   init();
@@ -58,14 +60,14 @@
     lucide.createIcons();
     bindDistancePicker();
     loadCrossings();
-    drawCrossings();
+    map.whenReady(drawCrossings);
     queueMapResize();
     form.addEventListener("submit", handleSubmit);
     rerouteButton.addEventListener("click", async () => {
       if (!state.start || !state.end) return;
       state.attempt += 1;
       setBusy(true);
-      statusText.textContent = "보행 가능한 후보 코스를 계산하는 중입니다.";
+      statusText.textContent = "보행 전용 후보 코스를 계산하는 중입니다.";
       try {
         await recommendRoute();
       } catch (error) {
@@ -74,6 +76,7 @@
         setBusy(false);
       }
     });
+    map.on("moveend zoomend resize", drawCrossings);
     window.addEventListener("resize", queueMapResize);
   }
 
@@ -100,20 +103,25 @@
   }
 
   function drawCrossings() {
-    const markers = L.canvas({ padding: 0.25 });
+    if (!crossingOverlay) return;
+    crossingOverlay.replaceChildren();
+    const fragment = document.createDocumentFragment();
+    const bounds = map.getBounds().pad(0.08);
+
     state.crossings.forEach((item) => {
-      L.circleMarker([item.lat, item.lng], {
-        renderer: markers,
-        radius: 2.4,
-        color: "#ffa42b",
-        weight: 1,
-        fillColor: "#ffa42b",
-        fillOpacity: 0.56,
-        opacity: 0.75,
-      })
-        .bindPopup(`<strong>${item.name || item.type || "횡단보도"}</strong><br>${item.address}`)
-        .addTo(crossingsLayer);
+      const latLng = L.latLng(item.lat, item.lng);
+      if (!bounds.contains(latLng)) return;
+
+      const point = map.latLngToContainerPoint(latLng);
+      const marker = document.createElement("span");
+      marker.className = "crossing-pin";
+      marker.style.left = `${point.x}px`;
+      marker.style.top = `${point.y}px`;
+      marker.title = item.address || item.name || "횡단보도";
+      fragment.appendChild(marker);
     });
+
+    crossingOverlay.appendChild(fragment);
   }
 
   async function handleSubmit(event) {
@@ -172,7 +180,7 @@
   }
 
   async function recommendRoute() {
-    statusText.textContent = "후보 경유지를 실제 보행 네트워크에 맞춰 계산하는 중입니다.";
+    statusText.textContent = "후보 경유지를 실제 보행 전용 네트워크에 맞춰 계산하는 중입니다.";
     rerouteButton.disabled = true;
     const candidates = buildCandidates(state.start, state.end, state.targetKm, state.attempt);
     const routedCandidates = [];
@@ -321,6 +329,7 @@
     const latLngs = route.points.map((point) => [point.lat, point.lng]);
 
     L.polyline(latLngs, {
+      pane: "routePane",
       color: "#1ed760",
       weight: 9,
       opacity: 0.96,
@@ -328,6 +337,7 @@
       lineJoin: "round",
     }).addTo(routeLayer);
     L.polyline(latLngs, {
+      pane: "routePane",
       color: "#0d0d0d",
       weight: 3,
       opacity: 0.35,
@@ -342,12 +352,13 @@
     requestAnimationFrame(() => {
       map.invalidateSize();
       map.fitBounds(bounds, { animate: true, maxZoom: 15 });
+      requestAnimationFrame(drawCrossings);
     });
 
     const km = route.lengthM / 1000;
     distanceMetric.textContent = `${km.toFixed(2)}km`;
     avoidMetric.textContent = `${route.danger}개`;
-    statusText.textContent = `${state.start.label}에서 ${state.end.label}까지 보행 네트워크 기준으로 ${state.targetKm}km에 가깝게 조정했습니다. 예상 횡단보도 근접 통과는 ${route.danger}곳입니다.`;
+    statusText.textContent = `${state.start.label}에서 ${state.end.label}까지 보행 전용 경로 기준으로 ${state.targetKm}km에 가깝게 조정했습니다. 예상 횡단보도 근접 통과는 ${route.danger}곳입니다.`;
     rerouteButton.disabled = false;
   }
 
@@ -375,7 +386,10 @@
   function queueMapResize() {
     requestAnimationFrame(() => {
       map.invalidateSize();
-      requestAnimationFrame(() => map.invalidateSize());
+      requestAnimationFrame(() => {
+        map.invalidateSize();
+        drawCrossings();
+      });
     });
   }
 

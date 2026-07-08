@@ -10,7 +10,7 @@
       integrity="sha256-p4NxAoJBhIINfQv8kTewqFhT4OfQMRGiiGvDmygB9bM="
       crossorigin=""
     />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=20260708-3" />
   </head>
   <body>
     <main class="app-shell">
@@ -97,10 +97,11 @@
 
       <section class="map-stage">
         <div id="map" aria-label="추천 러닝 코스 지도"></div>
+        <div id="crossingOverlay" aria-hidden="true"></div>
         <div class="map-overlay">
           <span class="overlay-pill green">추천 경로</span>
           <span class="overlay-pill red">시작/도착</span>
-          <span class="overlay-pill amber">횡단보도 데이터</span>
+          <span class="overlay-pill amber">횡단보도 전체</span>
         </div>
       </section>
     </main>
@@ -112,7 +113,7 @@
     ></script>
     <script src="https://cdn.jsdelivr.net/npm/proj4@2.11.0/dist/proj4.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="data/crossings.js"></script>
-    <script src="app.js"></script>
+    <script src="data/crossings.js?v=20260708-3"></script>
+    <script src="app.js?v=20260708-3"></script>
   </body>
 </html>
