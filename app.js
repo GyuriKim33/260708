@@ -1,6 +1,5 @@
 (function () {
   const SEOCHO_CENTER = [37.4837, 127.0324];
-  const RUN_PACE_MIN_PER_KM = 6.25;
   const CROSSING_DANGER_M = 26;
   const CROSSING_WARN_M = 48;
   const OSRM_BASE_URL = "https://router.project-osrm.org/route/v1";
@@ -40,7 +39,6 @@
   const rerouteButton = document.querySelector("#rerouteButton");
   const statusText = document.querySelector("#statusText");
   const distanceMetric = document.querySelector("#distanceMetric");
-  const timeMetric = document.querySelector("#timeMetric");
   const avoidMetric = document.querySelector("#avoidMetric");
   const primaryButton = document.querySelector(".primary-action");
 
@@ -67,7 +65,7 @@
       if (!state.start || !state.end) return;
       state.attempt += 1;
       setBusy(true);
-      statusText.textContent = "도로와 보행 경로를 따라 새 후보 코스를 계산하는 중입니다.";
+      statusText.textContent = "보행 가능한 후보 코스를 계산하는 중입니다.";
       try {
         await recommendRoute();
       } catch (error) {
@@ -174,19 +172,26 @@
   }
 
   async function recommendRoute() {
-    statusText.textContent = "후보 경유지를 실제 도로/보행 네트워크에 맞춰 계산하는 중입니다.";
+    statusText.textContent = "후보 경유지를 실제 보행 네트워크에 맞춰 계산하는 중입니다.";
     rerouteButton.disabled = true;
     const candidates = buildCandidates(state.start, state.end, state.targetKm, state.attempt);
     const routedCandidates = [];
 
     for (const waypoints of candidates) {
-      const routed = await fetchRoutedCandidate(waypoints);
-      routedCandidates.push(routed);
+      const routes = await fetchRoutedCandidates(waypoints);
+      routedCandidates.push(...routes);
+    }
+
+    if (!routedCandidates.length) {
+      state.route = null;
+      routeLayer.clearLayers();
+      clearMetrics();
+      throw new Error("보행 경로를 찾을 수 없습니다.");
     }
 
     const scored = routedCandidates
       .map((route) => scoreRoute(route.points, state.targetKm, route))
-      .sort((a, b) => a.score - b.score);
+      .sort(compareRoutes);
     state.route = scored[0];
     renderRoute(state.route);
   }
@@ -241,46 +246,42 @@
     });
   }
 
-  async function fetchRoutedCandidate(waypoints) {
-    const profiles = ["foot", "driving"];
-
-    for (const profile of profiles) {
-      try {
-        const route = await requestOsrmRoute(waypoints, profile);
-        if (route) return route;
-      } catch (error) {
-        // Try the next profile. Public OSRM deployments sometimes omit foot routing.
-      }
+  async function fetchRoutedCandidates(waypoints) {
+    try {
+      return await requestOsrmFootRoutes(waypoints);
+    } catch (error) {
+      return [];
     }
-
-    return {
-      points: densifyPoints(waypoints, 90),
-      lengthM: pathLengthMeters(waypoints),
-      profile: "fallback",
-    };
   }
 
-  async function requestOsrmRoute(waypoints, profile) {
+  async function requestOsrmFootRoutes(waypoints) {
     const coordinates = waypoints.map((point) => `${point.lng},${point.lat}`).join(";");
-    const url = new URL(`${OSRM_BASE_URL}/${profile}/${coordinates}`);
+    const url = new URL(`${OSRM_BASE_URL}/foot/${coordinates}`);
     url.searchParams.set("overview", "full");
     url.searchParams.set("geometries", "geojson");
     url.searchParams.set("steps", "false");
-    url.searchParams.set("alternatives", "false");
+    url.searchParams.set("alternatives", "true");
     url.searchParams.set("continue_straight", "false");
 
     const response = await fetch(url.toString());
-    if (!response.ok) return null;
+    if (!response.ok) throw new Error("보행 경로를 찾을 수 없습니다.");
     const data = await response.json();
-    const route = data.routes && data.routes[0];
-    const coordinatesList = route && route.geometry && route.geometry.coordinates;
-    if (!coordinatesList || coordinatesList.length < 2) return null;
+    if (data.code !== "Ok" || !Array.isArray(data.routes)) {
+      throw new Error("보행 경로를 찾을 수 없습니다.");
+    }
 
-    return {
-      points: coordinatesList.map(([lng, lat]) => ({ lat, lng })),
-      lengthM: route.distance,
-      profile,
-    };
+    return data.routes
+      .map((route, index) => {
+        const coordinatesList = route.geometry && route.geometry.coordinates;
+        if (!coordinatesList || coordinatesList.length < 2) return null;
+        return {
+          points: coordinatesList.map(([lng, lat]) => ({ lat, lng })),
+          lengthM: route.distance,
+          profile: "foot",
+          alternativeIndex: index,
+        };
+      })
+      .filter(Boolean);
   }
 
   function scoreRoute(points, targetKm, routed = {}) {
@@ -306,6 +307,12 @@
       profile: routed.profile || "line",
       score: danger * 190 + warning * 30 + distancePenalty + shortPenalty,
     };
+  }
+
+  function compareRoutes(a, b) {
+    if (a.danger !== b.danger) return a.danger - b.danger;
+    if (a.warning !== b.warning) return a.warning - b.warning;
+    return a.score - b.score;
   }
 
   function renderRoute(route) {
@@ -338,17 +345,9 @@
     });
 
     const km = route.lengthM / 1000;
-    const minutes = Math.round(km * RUN_PACE_MIN_PER_KM);
     distanceMetric.textContent = `${km.toFixed(2)}km`;
-    timeMetric.textContent = `${minutes}분`;
-    avoidMetric.textContent = `${Math.max(0, 100 - route.danger * 7 - route.warning)}점`;
-    const routeMode =
-      route.profile === "fallback"
-        ? "라우팅 API 연결이 불안정해 임시 후보선으로"
-        : route.profile === "driving"
-          ? "도로 네트워크 기준으로"
-          : "보행 네트워크 기준으로";
-    statusText.textContent = `${state.start.label}에서 ${state.end.label}까지 ${routeMode} ${state.targetKm}km에 가깝게 조정했습니다. 예상 횡단보도 근접 통과는 ${route.danger}곳입니다.`;
+    avoidMetric.textContent = `${route.danger}개`;
+    statusText.textContent = `${state.start.label}에서 ${state.end.label}까지 보행 네트워크 기준으로 ${state.targetKm}km에 가깝게 조정했습니다. 예상 횡단보도 근접 통과는 ${route.danger}곳입니다.`;
     rerouteButton.disabled = false;
   }
 
@@ -369,7 +368,6 @@
 
   function clearMetrics() {
     distanceMetric.textContent = "-";
-    timeMetric.textContent = "-";
     avoidMetric.textContent = "-";
     rerouteButton.disabled = true;
   }
@@ -387,21 +385,6 @@
       length += distanceMeters(points[i], points[i + 1]);
     }
     return length;
-  }
-
-  function densifyPoints(points, spacingM) {
-    const output = [];
-    for (let i = 0; i < points.length - 1; i += 1) {
-      const a = points[i];
-      const b = points[i + 1];
-      const distance = distanceMeters(a, b);
-      const steps = Math.max(1, Math.ceil(distance / spacingM));
-      for (let step = 0; step < steps; step += 1) {
-        output.push(interpolate(a, b, step / steps));
-      }
-    }
-    output.push(points[points.length - 1]);
-    return output;
   }
 
   function interpolate(a, b, t) {
