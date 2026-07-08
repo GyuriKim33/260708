@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Seocho Run Router</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIINfQv8kTewqFhT4OfQMRGiiGvDmygB9bM="
+      crossorigin=""
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <aside class="control-panel">
+        <div class="brand-row">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <div>
+            <p class="eyebrow">Seocho Runner</p>
+            <h1>철수의 횡단보도 회피 코스</h1>
+          </div>
+        </div>
+
+        <form id="routeForm" class="route-form">
+          <label>
+            <span>시작점</span>
+            <div class="input-wrap">
+              <i data-lucide="map-pin"></i>
+              <input
+                id="startInput"
+                name="start"
+                autocomplete="off"
+                value="양재역"
+                placeholder="예: 양재역, 반포종합운동장, 37.48,127.03"
+                required
+              />
+            </div>
+          </label>
+
+          <label>
+            <span>도착점</span>
+            <div class="input-wrap">
+              <i data-lucide="flag"></i>
+              <input
+                id="endInput"
+                name="end"
+                autocomplete="off"
+                value="서초구청"
+                placeholder="예: 서초구청, 고속터미널역"
+                required
+              />
+            </div>
+          </label>
+
+          <fieldset class="distance-picker">
+            <legend>러닝 거리</legend>
+            <label class="segmented active">
+              <input type="radio" name="distance" value="5" checked />
+              <span>5km</span>
+            </label>
+            <label class="segmented">
+              <input type="radio" name="distance" value="10" />
+              <span>10km</span>
+            </label>
+          </fieldset>
+
+          <button class="primary-action" type="submit">
+            <i data-lucide="sparkles"></i>
+            <span>AI 코스 추천</span>
+          </button>
+        </form>
+
+        <section class="result-panel" aria-live="polite">
+          <div class="result-header">
+            <p class="eyebrow">Recommended Route</p>
+            <button id="rerouteButton" class="icon-button" type="button" title="다시 짜기" disabled>
+              <i data-lucide="refresh-cw"></i>
+            </button>
+          </div>
+
+          <div id="statusText" class="status-text">시작점과 도착점을 입력하면 코스를 계산합니다.</div>
+
+          <dl class="metrics">
+            <div>
+              <dt>예상 거리</dt>
+              <dd id="distanceMetric">-</dd>
+            </div>
+            <div>
+              <dt>예상 시간</dt>
+              <dd id="timeMetric">-</dd>
+            </div>
+            <div>
+              <dt>회피 점수</dt>
+              <dd id="avoidMetric">-</dd>
+            </div>
+          </dl>
+        </section>
+      </aside>
+
+      <section class="map-stage">
+        <div id="map" aria-label="추천 러닝 코스 지도"></div>
+        <div class="map-overlay">
+          <span class="overlay-pill green">추천 경로</span>
+          <span class="overlay-pill red">시작/도착</span>
+          <span class="overlay-pill amber">횡단보도 데이터</span>
+        </div>
+      </section>
+    </main>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/proj4@2.11.0/dist/proj4.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="data/crossings.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

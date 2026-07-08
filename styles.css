@@ -1,0 +1,524 @@
+:root {
+  --bg: #121212;
+  --surface: #181818;
+  --surface-2: #1f1f1f;
+  --surface-3: #252525;
+  --text: #ffffff;
+  --muted: #b3b3b3;
+  --soft: #cbcbcb;
+  --green: #1ed760;
+  --green-deep: #1db954;
+  --red: #f3727f;
+  --amber: #ffa42b;
+  --blue: #539df5;
+  --shadow-heavy: rgba(0, 0, 0, 0.5) 0 8px 24px;
+  --shadow-mid: rgba(0, 0, 0, 0.3) 0 8px 8px;
+  color-scheme: dark;
+  font-family:
+    SpotifyMixUI, CircularSp-Arab, CircularSp-Hebr, CircularSp-Cyrl,
+    CircularSp-Grek, CircularSp-Deva, "Helvetica Neue", Helvetica, Arial,
+    "Hiragino Sans", "Hiragino Kaku Gothic ProN", Meiryo, "MS Gothic", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  overflow: hidden;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: minmax(340px, 410px) 1fr;
+  height: 100vh;
+  min-height: 620px;
+  gap: 8px;
+  padding: 8px;
+  background: var(--bg);
+}
+
+.control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  padding: 20px;
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-heavy);
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-mark {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: rgba(30, 215, 96, 0.28) 0 0 0 8px;
+  position: relative;
+}
+
+.brand-mark::before,
+.brand-mark::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  height: 3px;
+  border-radius: 9999px;
+  background: #101010;
+}
+
+.brand-mark::before {
+  top: 15px;
+  transform: rotate(-13deg);
+}
+
+.brand-mark::after {
+  top: 24px;
+  transform: rotate(13deg);
+}
+
+.eyebrow {
+  margin: 0 0 5px;
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.18;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.route-form {
+  display: grid;
+  gap: 14px;
+}
+
+.route-form label {
+  display: grid;
+  gap: 8px;
+  color: var(--soft);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.input-wrap {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: 500px;
+  background: var(--surface-2);
+  box-shadow: rgb(18, 18, 18) 0 1px 0, rgb(124, 124, 124) 0 0 0 1px inset;
+}
+
+.input-wrap svg {
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+}
+
+.input-wrap input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  color: var(--text);
+  background: transparent;
+  font-size: 15px;
+}
+
+.input-wrap:focus-within {
+  box-shadow: rgb(18, 18, 18) 0 1px 0, var(--green) 0 0 0 2px inset;
+}
+
+.distance-picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin: 2px 0 0;
+  padding: 4px;
+  border: 0;
+  border-radius: 500px;
+  background: var(--surface-2);
+}
+
+.distance-picker legend {
+  grid-column: 1 / -1;
+  padding: 0 0 8px 4px;
+  color: var(--soft);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.segmented {
+  min-height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 9999px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+}
+
+.segmented input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.segmented.active {
+  background: var(--green);
+  color: #101010;
+}
+
+.primary-action,
+.icon-button {
+  border: 0;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.primary-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 50px;
+  border-radius: 9999px;
+  background: var(--green);
+  color: #101010;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  box-shadow: var(--shadow-mid);
+}
+
+.primary-action:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.primary-action svg,
+.icon-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.result-panel {
+  margin-top: auto;
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  box-shadow: var(--shadow-mid);
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.icon-button {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+.icon-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.status-text {
+  min-height: 42px;
+  color: var(--soft);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 0;
+}
+
+.metrics div {
+  min-width: 0;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--surface-3);
+}
+
+.metrics dt {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.metrics dd {
+  margin: 5px 0 0;
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.map-stage {
+  position: relative;
+  min-width: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  background: #1f1f1f;
+}
+
+/* Local Leaflet layout fallback. If the CDN stylesheet is blocked or cached badly,
+   these rules keep map tiles, SVG routes, and marker panes aligned. */
+.leaflet-container {
+  overflow: hidden;
+  position: relative;
+  outline: 0;
+  font: 12px/1.5 "Helvetica Neue", Arial, Helvetica, sans-serif;
+}
+
+.leaflet-pane,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-tile-container,
+.leaflet-pane > svg,
+.leaflet-pane > canvas,
+.leaflet-zoom-box,
+.leaflet-image-layer,
+.leaflet-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.leaflet-container img.leaflet-tile,
+.leaflet-container .leaflet-marker-icon,
+.leaflet-container .leaflet-marker-shadow {
+  max-width: none;
+  max-height: none;
+}
+
+.leaflet-tile {
+  width: 256px;
+  height: 256px;
+  user-select: none;
+}
+
+.leaflet-safari .leaflet-tile {
+  image-rendering: -webkit-optimize-contrast;
+}
+
+.leaflet-zoom-animated {
+  transform-origin: 0 0;
+}
+
+.leaflet-interactive {
+  cursor: pointer;
+}
+
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+  display: block;
+}
+
+.leaflet-pane {
+  z-index: 400;
+}
+
+.leaflet-tile-pane {
+  z-index: 200;
+}
+
+.leaflet-overlay-pane {
+  z-index: 400;
+}
+
+.leaflet-shadow-pane {
+  z-index: 500;
+}
+
+.leaflet-marker-pane {
+  z-index: 600;
+}
+
+.leaflet-tooltip-pane {
+  z-index: 650;
+}
+
+.leaflet-popup-pane {
+  z-index: 700;
+}
+
+.leaflet-control {
+  position: relative;
+  z-index: 800;
+  pointer-events: auto;
+}
+
+.map-overlay {
+  position: absolute;
+  z-index: 500;
+  left: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.overlay-pill {
+  padding: 8px 12px;
+  border-radius: 9999px;
+  background: rgba(18, 18, 18, 0.88);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: var(--shadow-mid);
+}
+
+.overlay-pill::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 7px;
+  border-radius: 50%;
+}
+
+.overlay-pill.green::before {
+  background: var(--green);
+}
+
+.overlay-pill.red::before {
+  background: var(--red);
+}
+
+.overlay-pill.amber::before {
+  background: var(--amber);
+}
+
+.pin-marker {
+  width: 26px;
+  height: 26px;
+  border-radius: 50% 50% 50% 4px;
+  background: var(--red);
+  border: 3px solid #ffffff;
+  box-shadow: rgba(0, 0, 0, 0.4) 0 5px 14px;
+  transform: rotate(-45deg);
+}
+
+.pin-marker span {
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: #181818;
+  color: #ffffff;
+}
+
+.leaflet-popup-content {
+  margin: 10px 12px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+@media (max-width: 895px) {
+  body {
+    overflow: auto;
+  }
+
+  .app-shell {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .control-panel {
+    order: 2;
+  }
+
+  .map-stage {
+    order: 1;
+    height: 58vh;
+    min-height: 390px;
+  }
+}
+
+@media (max-width: 520px) {
+  .app-shell {
+    padding: 0;
+    gap: 0;
+  }
+
+  .control-panel,
+  .map-stage {
+    border-radius: 0;
+  }
+
+  .control-panel {
+    padding: 16px;
+  }
+
+  h1 {
+    font-size: 21px;
+  }
+
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+}
